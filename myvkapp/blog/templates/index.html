@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+  <section class="hero">
+    <h1>𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐭𝐨 𝐕𝐂 𝐁𝐥𝐨𝐠</h1>
+    <p>𝐈𝐧𝐬𝐢𝐠𝐡𝐭𝐬, 𝐬𝐭𝐨𝐫𝐢𝐞𝐬, 𝐚𝐧𝐝 𝐭𝐡𝐨𝐮𝐠𝐡𝐭𝐬 𝐬𝐡𝐚𝐫𝐞𝐝 𝐰𝐢𝐭𝐡 𝐭𝐡𝐞 𝐰𝐨𝐫𝐥𝐝.</p>
+    <a href="/blog_post_page" class="btn">Read Latest Posts</a>
+  </section>
+  <main>
+    <section class="latest-posts" id="latest-posts">
+      <h2>{{blog_title }}</h2>
+      {% include "includes/errors.html" %}
+      <div class="posts-container">
+        {% if posts %}
+          {% for post in posts%}
+            <article class="post">
+              <div class="image-container">
+                <img src="{{post.formatted_img_url}}" alt="Blog Cover" class="post-image">
+                <!-- ✅ Heart positioned inside image container -->
+                <label class="post_like_btn" >
+                  <input type="checkbox" name='like' class="post_like_toggle"data-post-id="{{ post.id }}" {% if post.id in liked_post_ids %}checked{% endif %} {% if not user.is_authenticated %}disabled{% endif %}>
+                  <span class="post_heart">&#10084;</span>
+                </label>
+              </div> 
+              <h3>{{post.title}}</h3>
+              <p>{{post.content |truncatechars:50}}</p>
+              <div class="post-footer">
+                <a href="{% url "blog:detail" slug=post.slug %}" class="read-more">Read More</a>
+                <h4 class="category">{{post.category}}</h4>
+              </div>
+            </article>
+          {% endfor %}          
+        {% endif %}        
+      </div>
+    </section>
+  </main>
+ 
+
+{% endblock %}

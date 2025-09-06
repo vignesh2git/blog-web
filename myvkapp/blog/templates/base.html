@@ -1,0 +1,526 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>𝐕𝐂 𝐁𝐥𝐨𝐠</title>
+  <link rel="stylesheet" href="{% static  'blog/style.css' %}"/>
+  <link rel="stylesheet" href="{% static  'blog/responsive.css' %}"/>
+  <link rel="shortcut icon" href="{% static  'blog/images/brand.jpg'%}" type="image/x-icon">
+</head>
+<body>
+
+  <!-- Header  -->
+
+  {% include 'includes/header.html' %}
+
+  <!-- Dynamic content -->
+
+    {% block content %}
+    {% endblock  %}
+
+  <!-- Footer  -->
+
+  {% include 'includes/footer.html' %}
+
+ 
+
+  <!-- post like btn action -->
+<script>
+  //Post  like
+  document.addEventListener('DOMContentLoaded', function () {
+    const likeToggles = document.querySelectorAll('.post_like_toggle');
+
+    likeToggles.forEach(checkbox => {
+      const postId = checkbox.getAttribute('data-post-id');
+      const label = checkbox.closest('.post_like_btn');
+      
+
+      checkbox.addEventListener('change', function () {
+        fetch("{% url 'blog:like_post' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: `post_id=${postId}`
+        })
+        .then(response => response.json())
+        .catch(error => console.error("Error:", error));
+      });
+    });
+  });
+</script>
+<!--  follow btn action  -->
+<script>
+    //  follow btn action
+    document.addEventListener('DOMContentLoaded', function () {
+        const followBtn = document.getElementById('follow-btn');
+        if (!followBtn) return;
+
+        followBtn.addEventListener('click', function () {
+            const username = this.dataset.username;
+
+            fetch("{% url 'blog:toggle_follow' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+                body: new URLSearchParams({
+                    'username': username,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.is_following) {
+                        followBtn.textContent = 'Unfollow';
+                        followBtn.style.backgroundColor = "#9a9a9aff";
+                    } else {
+                        followBtn.textContent = 'Follow';
+                        followBtn.style.backgroundColor = "#111";
+                    }
+                    // Update followers count in DOM
+                    document.querySelector('.stats div:nth-child(2) strong').textContent = data.followers_count;
+                    document.querySelector('.stats div:nth-child(3) strong').textContent = data.following_count;
+                } else {
+                    alert(data.error || 'Something went wrong!');
+                }
+            })
+
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+</script>
+    <!-- detali page like btn action -->
+<script>
+    //detali page like btn
+  document.addEventListener('DOMContentLoaded', function () {
+    const likeBtn = document.getElementById('likeBtn');
+    
+    if (!likeBtn) {
+        // Element doesn't exist, so just exit early.
+        return;
+    }
+    
+    const postId = likeBtn.getAttribute('data-post-id');
+    likeBtn.addEventListener('click', function () {
+      fetch("{% url 'blog:like_post' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: `post_id=${postId}`
+      })
+      .then(response => response.json())
+      .then(data => {
+        const likeCountSpan = document.getElementById('likeCount');
+        likeCountSpan.textContent = data.like_count;
+
+        // Update button label/icon
+        likeBtn.innerHTML = data.liked
+          ? `❤️ Unlike (<span id="likeCount">${data.like_count}</span>)`
+          : `&#10084; Like (<span id="likeCount">${data.like_count}</span>)`;
+      })
+      .catch(error => console.error("Error:", error));
+    });
+  });
+</script>
+
+    <!-- detail page  Share btn action and comment action  -->
+<script>
+    // Share btn
+  document.addEventListener('DOMContentLoaded', function () {
+    const shareBtn = document.getElementById('shareBtn');
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function () {
+        const postTitle = "{{ post.title|escapejs }}";
+        const postUrl = window.location.href;
+
+        if (navigator.share) {
+          // ✅ Native mobile share
+          navigator.share({
+            title: postTitle,
+            url: postUrl
+          }).catch((err) => {
+            console.warn("Share canceled or failed:", err);
+          });
+        } else {
+          // 🖥️ Fallback for desktop: copy link
+          navigator.clipboard.writeText(postUrl)
+            .then(() => alert("Link copied to clipboard!"))
+            .catch(() => alert("Failed to copy link."));
+        }
+      });
+    }
+  });
+
+  
+    //comment action =================
+    document.addEventListener('DOMContentLoaded', function () {
+        const commentOverlay = document.getElementById('commentOverlay');
+        const openCommentsBtn = document.getElementById('openCommentsBtn');
+        const closeCommentsBtn = document.getElementById('closeCommentsBtn');
+        const commentsContainer = document.getElementById('commentsContainer');
+        const postBtn = document.getElementById('postBtn');
+        const commentInput = document.getElementById('commentInput');
+        const postId = "{{ post.id }}";
+
+        const deletePopup = document.getElementById('deletePopup');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+
+        let replyTo = null;
+        let deleteTarget = null;
+
+        function timeAgo(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`; // less than a week
+
+            const weeks = Math.floor(seconds / 604800);
+            if (weeks <= 4) return `${weeks}w`;
+
+            const months = Math.floor(weeks / 4.345); // Approximate weeks in a month
+            return `${months}mo`;
+
+            const years = Math.floor(months / 12);
+            return `${years}y`;
+        }
+
+
+        function closeOverlay() {
+            if (commentOverlay) {
+                commentOverlay.style.display = 'none';
+            }
+            if (commentInput) {
+                commentInput.value = '';
+            }
+            replyTo = null;
+            deleteTarget = null;
+            hideDeletePopup();
+        }
+
+        if (openCommentsBtn) {
+            openCommentsBtn.onclick = () => {
+                if (commentOverlay) commentOverlay.style.display = 'flex';
+                if (commentInput) commentInput.focus();
+                loadComments();
+            };
+        }
+        if (closeCommentsBtn) {
+            closeCommentsBtn.onclick = () => closeOverlay();
+        }
+        if (commentOverlay) {
+            commentOverlay.onclick = (e) => {
+                if (e.target === commentOverlay) closeOverlay();
+            };
+        }
+
+        function showDeletePopup() {
+            if (deletePopup) deletePopup.style.display = 'flex';
+        }
+
+        function hideDeletePopup() {
+            if (deletePopup) deletePopup.style.display = 'none';
+        }
+
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.onclick = () => {
+                if (!deleteTarget) return;
+
+                fetch("{% url 'blog:delete_comment' %}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: `comment_id=${deleteTarget.commentId}`
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        hideDeletePopup();
+                        deleteTarget = null;
+                        loadComments();
+                    }
+                })
+                .catch(console.error);
+            };
+        }
+
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.onclick = () => {
+                deleteTarget = null;
+                hideDeletePopup();
+            };
+        }
+
+        function loadComments() {
+            if (!commentsContainer) return;
+            fetch(`/api/comments/${postId}`)
+                .then(res => res.json())
+                .then(data => {
+                    commentsContainer.innerHTML = '';
+
+                    if (data.comments.length === 0) {
+                        // Show message when no comments are present
+                        const noCommentsMessage = document.createElement('div');
+                        noCommentsMessage.classList.add('no-comments-message');
+                        noCommentsMessage.textContent = "No comments. Leave your comment below.";
+                        commentsContainer.appendChild(noCommentsMessage);
+                    } else {
+                        // Render each comment
+                        data.comments.forEach(comment => {
+                            const commentDiv = createCommentDiv(comment);
+                            commentsContainer.appendChild(commentDiv);
+                        });
+                    }
+                })
+                .catch(console.error);
+        }
+
+        const currentUser = "{{ request.user.username|escapejs }}";
+        const currentUserAvatar = "{% if request.user.profile.profile_image.url and request.user.profile.profile_image.url != '/Proflie/images/default.png' %}{{ request.user.profile.profile_image.url }}{% else %}https://ui-avatars.com/api/?name={{ request.user.username|urlencode }}&background=random{% endif %}";
+
+        function flattenReplies(comment) {
+            // Collect all replies, including nested ones, in a flat array
+            const flatReplies = [];
+
+            function traverseReplies(replies) {
+                replies.forEach(reply => {
+                    flatReplies.push(reply);
+                    if (reply.replies && reply.replies.length > 0) {
+                        traverseReplies(reply.replies);
+                    }
+                });
+            }
+
+            if (comment.replies && comment.replies.length > 0) {
+                traverseReplies(comment.replies);
+            }
+
+            return flatReplies;
+        }
+        let showRepliesFor = null; // Track which comment's replies are shown
+
+        function createCommentDiv(comment) {
+            const div = document.createElement('div');
+            div.classList.add('comment');
+
+            const usernameDisplay = comment.username === currentUser ? 'you' : comment.username;
+            const avatarDisplay = comment.username === currentUser ? currentUserAvatar : comment.avatar;
+
+            div.innerHTML = `
+                <div class="comment-header">
+                    <img class="avatar" src="${avatarDisplay}" alt="${comment.username}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User&background=random';" />
+                    <strong>${usernameDisplay}</strong>
+                    <span class="time">• ${timeAgo(comment.created_at)}</span>
+                </div>
+                <div class="text">${comment.content}</div>
+                <div class="actions">
+                    <button class="like-btn" data-comment-id="${comment.id}">
+                        ${comment.liked_by_user ? '❤️' : '🤍'} ${comment.no_of_likes}
+                    </button>
+                    <button class="reply-btn" data-comment-id="${comment.id}" data-username="${comment.username}">Reply</button>
+                    ${comment.can_delete ? `<button class="delete-btn" data-comment-id="${comment.id}" style="color:red;">Delete</button>` : ''}
+                </div>
+            `;
+
+            // Add reply toggle button if replies exist
+            if (comment.replies.length > 0) {
+                const viewRepliesBtn = document.createElement("button");
+                viewRepliesBtn.className = "view-replies-btn";
+                viewRepliesBtn.style.marginTop = "5px";
+                const totalRepliesCount = flattenReplies(comment).length;
+
+                viewRepliesBtn.textContent =
+                showRepliesFor === comment.id
+                ? "Hide replies"
+                : `View all ${totalRepliesCount} repl${totalRepliesCount === 1 ? 'y' : 'ies'}`;
+
+
+                viewRepliesBtn.onclick = () => {
+                    showRepliesFor = showRepliesFor === comment.id ? null : comment.id;
+                    loadComments(); // re-render the comments with updated state
+                };
+
+                div.appendChild(viewRepliesBtn);
+            }
+
+            // Replies container (rendered only if replies should be shown)
+            if (showRepliesFor === comment.id) {
+                const repliesContainer = document.createElement('div');
+                repliesContainer.classList.add('replies');
+
+                const flatReplies = flattenReplies(comment);
+                flatReplies.forEach(reply => {
+                    const replyDiv = document.createElement('div');
+                    replyDiv.classList.add('reply');
+                    replyDiv.style.marginLeft = '20px';
+
+                    const replyUsernameDisplay = reply.username === currentUser ? 'you' : reply.username;
+                    const replyAvatarDisplay = reply.username === currentUser ? currentUserAvatar : reply.avatar;
+
+                    replyDiv.innerHTML = `
+                        <div class="comment-header">
+                            <img class="avatar" src="${replyAvatarDisplay}" alt="${reply.username}" />
+                            <strong>${replyUsernameDisplay}</strong>
+                            <span class="time">• ${timeAgo(reply.created_at)}</span>
+                        </div>
+                        <div class="text">${reply.content}</div>
+                        <div class="actions">
+                            <button class="like-btn" data-comment-id="${reply.id}">
+                                ${reply.liked_by_user ? '❤️' : '🤍'} ${reply.no_of_likes}
+                            </button>
+                            <button class="reply-btn" data-comment-id="${comment.id}" data-reply-id="${reply.id}" data-username="${reply.username}">Reply</button>
+                            ${reply.can_delete ? `<button class="delete-btn" data-comment-id="${reply.id}" style="color:red;">Delete</button>` : ''}
+                        </div>
+                    `;
+
+                    // Attach reply events
+                    replyDiv.querySelector('.like-btn').onclick = () => {
+                        const commentId = reply.id;
+                        fetch("{% url 'blog:like_comment' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': "{{ csrf_token }}",
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `comment_id=${commentId}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.like_count !== undefined) {
+                                replyDiv.querySelector('.like-btn').innerHTML = `${data.liked ? '❤️' : '🤍'} ${data.like_count}`;
+                            }
+                        });
+                    };
+
+                    replyDiv.querySelector('.reply-btn').onclick = () => {
+                        replyTo = {
+                            commentId: comment.id,
+                            replyId: reply.id,
+                            userName: reply.username
+                        };
+                        if (commentInput) {
+                            commentInput.value = `@${replyTo.userName} `;
+                            commentInput.focus();
+                        }
+                    };
+
+                    const deleteBtn = replyDiv.querySelector('.delete-btn');
+                    if (deleteBtn) {
+                        deleteBtn.onclick = () => {
+                            deleteTarget = { commentId: reply.id };
+                            showDeletePopup();
+                        };
+                    }
+
+                    repliesContainer.appendChild(replyDiv);
+                });
+
+                div.appendChild(repliesContainer);
+            }
+
+            // Like, reply, delete event for top-level comment
+            div.querySelector('.like-btn').onclick = () => {
+                const commentId = comment.id;
+                fetch("{% url 'blog:like_comment' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': "{{ csrf_token }}",
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `comment_id=${commentId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.like_count !== undefined) {
+                        div.querySelector('.like-btn').innerHTML = `${data.liked ? '❤️' : '🤍'} ${data.like_count}`;
+                    }
+                });
+            };
+
+            div.querySelector('.reply-btn').onclick = () => {
+                replyTo = {
+                    commentId: comment.id,
+                    replyId: null,
+                    userName: comment.username
+                };
+                if (commentInput) {
+                    commentInput.value = `@${replyTo.userName} `;
+                    commentInput.focus();
+                }
+            };
+
+            const deleteBtn = div.querySelector('.delete-btn');
+            if (deleteBtn) {
+                deleteBtn.onclick = () => {
+                    deleteTarget = { commentId: comment.id };
+                    showDeletePopup();
+                };
+            }
+
+            return div;
+        }
+
+        if (postBtn) {
+            postBtn.onclick = () => {
+                if (!commentInput) return;
+                const content = commentInput.value.trim();
+                if (!content) return;
+
+                const body = new URLSearchParams({
+                    'post_id': postId,
+                    'content': content
+                });
+
+                if (replyTo) {
+                    body.set('parent_id', replyTo.replyId || replyTo.commentId);
+                }
+
+                fetch("{% url 'blog:post_comment' %}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: body.toString()
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        commentInput.value = '';
+                        replyTo = null;
+                        loadComments();
+                    }
+                })
+                .catch(console.error);
+            };
+        }
+    });
+
+
+</script>
+ <!-- in moblie navbar close  action -->
+<script>
+    //in moblie navbar close  action 
+  document.addEventListener('click', function (event) {
+    const toggle = document.getElementById('menu-toggle');
+    const nav = document.querySelector('.navbar');
+
+    // If the menu is open and click is outside the navbar
+    if (toggle.checked && !nav.contains(event.target)) {
+      toggle.checked = false;  // Close the menu
+    }
+  });
+</script>
+</body>
+</html>

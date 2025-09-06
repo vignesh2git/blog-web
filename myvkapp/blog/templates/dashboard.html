@@ -1,0 +1,108 @@
+{% extends 'dashboardBase.html' %}
+{% block content %}
+    <!-- Main -->
+    <main class="main-content">
+      <header class="topbar">
+        <h1>𝐃𝐚𝐬𝐡𝐛𝐨𝐚𝐫𝐝</h1>
+        <div class="user-actions">
+            <span>𝐖𝐞𝐥𝐜𝐨𝐦𝐞, <strong>{{user.username}}</strong> <i class="fas fa-bell {% if has_unread_notifications %}has-notifications{% endif %}"></i></span>            
+        </div>        
+      </header>
+
+      <!-- Notification Overlay -->
+      <div id="notificationOverlay" class="notification-overlay" style="display:none;">
+        <div class="overlay-content">
+            <div class="overlay-header">
+              <h3>🔔 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬</h3>
+              <button id="clearNotificationsBtn" class="clear-btn">Clear All</button>
+              <button id="closeOverlayBtn" class="close-btn"></button>            
+            </div>
+            <ul id="notificationList">
+              {% for notif in notifications %}
+              <li>
+                  {% if notif.type == 'like' %}
+                  ❤️ <strong><a href="{% url 'blog:user_profile' username=notif.sender.username %}">{{ notif.sender.username }}</a></strong> liked your post: 
+                  <a href="{% url 'blog:detail' notif.post.slug %}">{{ notif.post.title }}</a>
+                  {% elif notif.type == 'comment' %}
+                  💬 <strong><a href="{% url 'blog:user_profile' username=notif.sender.username %}">{{ notif.sender.username }}</a></strong> commented on your post: 
+                  <a href="{% url 'blog:detail' notif.post.slug %}">{{ notif.post.title }}</a>
+                  {% elif notif.type == 'comment_like' %}
+                  👍 <strong><a href="{% url 'blog:user_profile' username=notif.sender.username %}">{{ notif.sender.username }}</a></strong> liked your comment on: 
+                  <a href="{% url 'blog:detail' notif.comment.post.slug %}">{{ notif.comment.post.title }}</a>
+                  {% elif notif.type == 'follow' %}
+                  👤 <strong><a href="{% url 'blog:user_profile' username=notif.sender.username %}">{{ notif.sender.username }}</a></strong> followed you.
+                  {% endif %}
+                  <br>
+                  <small>{{ notif.created_at|timesince }} ago</small>
+              </li>
+              {% empty %}
+              <li>No notifications yet.</li>
+              {% endfor %}
+            </ul>
+        </div>
+      </div>
+
+      <section class="dashboard-cards">
+        <div>
+          <h3 class="head">𝐘𝐨𝐮𝐫 𝐀𝐜𝐭𝐢𝐯𝐢𝐭𝐲</h3>
+          <div class="card">
+              <div class="card-1">
+                <h3 class="card-2">Your Total Posts</h3>
+                <p class="card-2">{{ user_post_count }}</p>
+              </div>
+              <div class="card-1">
+                <h3 class="card-2">Followers</h3>
+                <p class="card-2">{{ followers_count }}</p>
+              </div>
+              <div class="card-1">
+                <h3 class="card-2">Following</h3>
+                <p class="card-2">{{ following_count }}</p>
+              </div>
+          </div>                    
+        </div>
+      </section>
+
+      {% include "includes/errors.html" %}
+      
+      <section class="recent-posts">
+        <div class = "post-area">
+          <h2>𝐌𝐲 𝐏𝐨𝐬𝐭𝐬</h2>
+          <button class ="post_btn"><a href="{% url 'blog:new_post' %}">New Post &nbsp;</a><i class="fas fa-plus"></i></button>                
+        </div>
+        <div class="dashboard-posts-container">
+          {% if all_posts %}
+            {% for post in all_posts %}
+            <article class="dashboard-post">
+              <div class="dashboard-image-container">
+                <img src="{{post.formatted_img_url}}" alt="Blog Cover" class="dashboard-post-image" >
+                <!-- ✅ Heart positioned inside image container -->
+                <label class="post_like_btn">
+                <input type="checkbox" name='like' class="post_like_toggle" data-post-id="{{ post.id }}" {% if post.id in liked_post_ids %}checked{% endif %}>
+                <span class="post_heart">&#10084;</span>
+                </label>
+              </div>                    
+              <h3>{{post.title | capfirst}}</h3>
+              <p>{{post.content |truncatechars:50}}</p>
+              <div class="dashboard-post-footer">
+                <a href="{% url "blog:detail" slug=post.slug %}" class="read-more">Read More</a>
+                <h4 class="category">{{post.category | capfirst}}</h4>
+              </div>
+              <div class="button-footer">
+                <button class="edit"><a href="{% url 'blog:edit_post' post_id=post.id %}">Edit</a></button>
+                <button class="danger"onclick=confirmBeforeDelete(`{% url 'blog:delete_post' post_id=post.id %}`)>Delete</button>  
+                {% if not post.is_published %}             
+                <button class="publish"><a href="{% url 'blog:publish_post' post_id=post.id %}">Publish</a></button>
+                {%endif%}
+              </div>               
+            </article> 
+            {% endfor %}   
+        </div>
+          {% else %}               
+        <div>
+            <h2 class="NoDashboardPosts">  𝐂𝐫𝐞𝐚𝐭𝐞 𝐍𝐞𝐰 𝐏𝐨𝐬𝐭𝐬</h2>
+        </div>
+        {% endif %} 
+      </section>
+    </main>
+
+{% endblock %}

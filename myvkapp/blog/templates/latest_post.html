@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2 class="heading">{{blog_title | upper}}</h2>
+  {% include "includes/errors.html" %}
+  <section class="latest-posts" id="latest-posts">
+    <div class="posts-container">
+      {% if page_obj %}
+        {% for post in page_obj %}
+          <article class="post">
+              <div class="image-container">
+                <img src="{{post.formatted_img_url}}" alt="Blog Cover" class="post-image">
+                <!-- ✅ Heart positioned inside image container -->
+                <label class="post_like_btn">
+                  <input type="checkbox" name='like' class="post_like_toggle" data-post-id="{{ post.id }}" {% if post.id in liked_post_ids %}checked{% endif %}>
+                  <span class="post_heart">&#10084;</span>
+                </label>
+              </div> 
+              <h3>{{post.title | capfirst}}</h3>
+              <p>{{post.content |truncatechars:50}}</p>
+              <div class="post-footer">
+                <a href="{% url "blog:detail" slug=post.slug %}" class="read-more">Read More</a>
+                <h4 class="category">{{post.category | capfirst}}</h4>
+              </div>              
+          </article>
+        {% endfor %}             
+      {% else %}
+      <div>
+          <h2 class="heading"> No Posts Avalible</h2>
+      </div>
+      {% endif %}      
+    </div>
+  
+    {%if page_obj.has_other_pages%}
+      <div class="pagination">
+        {%if page_obj.has_previous%}
+          <a href="?page=1">&laquo; First</a>
+          <a href="?page={{page_obj.previous_page_number}}">Previous</a>
+        {%endif%}   
+          <span class="current">Page {{page_obj.number}} of {{page_obj.paginator.num_pages}}.</span>
+        {%if page_obj.has_next%}
+          <a href="?page={{page_obj.next_page_number}}">Next</a>
+          <a href="?page={{page_obj.paginator.num_pages}}">Last &raquo;</a>
+        {%endif%}     
+      </div>
+    {%endif%}
+
+
+  </section>
+  <!-- Comment overlay -->
+  <div class="overlay" id="commentOverlay" role="dialog" aria-modal="true" aria-labelledby="commentsTitle" tabindex="-1">
+    <div class="container">
+      <button id="closeCommentsBtn" aria-label="Close comments overlay">×</button>
+      <h3 id="commentsTitle">Comments</h3>
+      <div id="commentsContainer" tabindex="0" aria-live="polite" aria-relevant="additions"></div>
+      <div class="comment-input">
+        <textarea id="commentInput" placeholder="Add a comment..." aria-label="Add a comment"></textarea>
+        <button id="postBtn">Post</button>
+      </div>
+    </div>
+  </div>
+  <!-- Delete popup -->
+  <div id="deletePopup" class="delete-popup" style="display:none;" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle" aria-describedby="deleteDesc">
+    <div class="delete-dialog">
+      <p id="deleteTitle">Delete this comment?</p>
+      <p id="deleteDesc">Are you sure you want to delete this comment?</p>
+      <button class="btn-delete" id="confirmDeleteBtn">Delete</button>
+      <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
+    </div>
+  </div>
+  <!-- post like -->
+
+{% endblock %}

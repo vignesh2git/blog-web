@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="profile_container">
+        <img src="{{ profile_user.profile.profile_image.url }}" class="profile-image" alt="Profile" />
+        <div class="username">{{ profile_user.username|capfirst }}</div>
+        <div class="bio">{{ profile_user.profile.bio|linebreaks  }}</div>
+        <div class="stats">
+            <div>
+                <strong>{{ all_posts|length }}</strong><br>Posts
+            </div>
+            <div>
+                <strong>{{ followers_count }}</strong><br>Followers
+            </div>
+            <div>
+                <strong>{{ following_count }}</strong><br>Following
+            </div>
+        </div>
+        {% if not is_own_profile %}
+            <button class="follow-button" id="follow-btn" data-username="{{ profile_user.username }}"style='background-color: {% if is_following %}#999{% else %}#111{% endif %};'>
+                {% if is_following %}
+                Unfollow
+                {% else %}
+                Follow                
+                {% endif %}
+            </button>
+        {% endif %}
+        <section class="recent-posts">
+            <div class="profile-posts-container">
+                {% if all_posts %}
+                    {% for post in all_posts %}
+                        <article class="profile-post">
+                            <div class="profile-image-container">
+                                <img src="{{post.formatted_img_url}}" alt="Blog Cover" class="profile-post-image" >
+                                <!-- ✅ Heart positioned inside image container -->
+                                <label class="post_like_btn">
+                                <input type="checkbox" name ='like' class="post_like_toggle" data-post-id="{{ post.id }}" {% if post.id in liked_post_ids %}checked{% endif %}>
+                                <span class="post_heart">&#10084;</span>
+                                </label>
+                            </div>                       
+                            <h3>{{post.title | capfirst}}</h3>
+                            <p>{{post.content |truncatechars:50}}</p>
+                            <div class="profile-post-footer">
+                                <a href="{% url "blog:detail" slug=post.slug %}" class="read-more">Read More</a>
+                                <h4 class="category">{{post.category | capfirst}}</h4>
+                            </div>              
+                        </article> 
+                    {% endfor %}   
+                {% endif %}               
+            </div>
+        </section>
+        <div class="back-to-posts bottom-back-link">
+        <a href="{{ back_url }}">&larr;{{ back_label }}</a>
+        </div>
+    </div>
+{% endblock %}

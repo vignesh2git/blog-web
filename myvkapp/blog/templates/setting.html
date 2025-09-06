@@ -1,0 +1,62 @@
+{% extends 'dashboardBase.html' %}
+{% block content %}
+      <!-- Main -->
+      <main class="main-content" id="mainContent">
+        <header class="topbar">
+          <h1>𝐒𝐞𝐭𝐭𝐢𝐧𝐠𝐬</h1>
+        </header>
+        {% include "includes/errors.html" %}
+        <h2>Account Settings</h2>
+        <section class="settings-page">
+          <form id="settingsForm" method="POST" enctype="multipart/form-data" >
+            {% csrf_token %}
+            <!-- Profile Image Upload with Icon -->
+            <div class="settings-profile-image">
+              <h4>Profile Picture</h4><br />
+              <div class="image-preview-container">
+                <img
+                  id="imagePreview"
+                  src="{{ user.profile.profile_image.url }}"
+                  alt="Current Profile"
+                onerror="this.src='/media/Proflie/images/default.png'" 
+                />
+                <button type="button" class="edit-btn" id="triggerUpload">
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+                
+              </div>
+              <!-- Hidden file input -->
+              <input
+                type="file"
+                id="profileImage"
+                name="profileImage"
+                accept="image/*"
+                style="display: none"
+              />
+            </div>           
+            <!-- Username -->
+            <label for="username"><h4>Username:</h4></label>
+            <input type="text" id="username" name="username" value="{{ user.username }}" autocomplete="username"/>
+            <!-- Email -->
+            <label for="email"><h4>Email:</h4></label>
+            <input type="email" id="email" name="email" value="{{ user.email }}"autocomplete="email" />
+            <!-- Bio -->
+            <label for="bio"><h4>Bio:</h4></label>
+            <textarea
+            id="bio"
+            name="bio"
+            rows="5"
+            placeholder="Write something about yourself..."
+            >{{ user.profile.bio }}</textarea>
+            <br /><br />
+            <button type="submit">Update Profile</button>
+          </form>
+        </section>
+        {% comment %} <h2>Privacy</h2>
+        <section class="settings-page">
+          <button>change password</button>
+        </section> {% endcomment %}
+      </main>
+{% endblock %}
+  </body>
+</html>

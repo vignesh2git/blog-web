@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <!-- Main blog content -->
+  <main class='detail_main'>
+        <article>
+        <h1 class="detail_post-title">{{post.title | capfirst}}</h1>
+        <div class="detail_post-meta">      
+                By <strong> {% if post.user and post.user.username %} {% if post.user != request.user %}
+                    <a href="{% url 'blog:user_profile' username=post.user.username %}">{{ post.user.username }}</a>
+                {% else %}
+                    {{ post.user.username }}
+                {% endif %}  {% else %}
+                    Unknown user
+                {% endif %}</strong> | {{post.created_at | date:'F,j,Y '}}| <span class="category"><strong>{{post.category |capfirst }}</strong></span>                     
+                {% if not is_own_profile %}
+                    <button  id="follow-btn" data-username="{{ profile_user.username }}" style='background-color: {% if is_following %}#999{% else %}#111{% endif %};'>
+                        {% if is_following %}
+                        Unfollow
+                        {% else %}
+                        Follow          
+                        {% endif %}
+                    </button>
+                {% endif %}
+        </div>
+        <img src="{{post.formatted_img_url}}" alt="Blog Cover" class="detail_post-image" />
+                <!-- Social Share -->
+        <section class="social-actions">
+                <div class="actions-row">
+                    <!-- Like Button -->
+                    <button id="likeBtn" data-post-id="{{ post.id }}" class="detail_action_btn" style="cursor:pointer;">
+                        {% if liked %}
+                        ❤️ Unlike (<span id="likeCount">{{ post.no_of_likes }}</span>)
+                        {% else %}
+                        &#10084; Like (<span id="likeCount">{{ post.no_of_likes }}</span>)
+                        {% endif %}
+                    </button>
+                    <button  class="detail_action_btn" id="openCommentsBtn"><i>💬</i> Comment</button>
+                    <button class="detail_action_btn" id="shareBtn"><i>🔗</i> Share</button>
+                </div>
+        </section>
+            <div class="detail_post-content">
+                <p>{{post.content |linebreaks}}</p>
+            </div>
+        <section class="detail_related-posts">
+                <h3>Related Posts</h3>
+                <ul>
+                {% for related_post in related_posts%}
+                <li><a href="{% url "blog:detail" slug=related_post.slug %}">{{related_post.title}}</a></li>
+                {%endfor%}
+                </ul>
+        </section>
+        <div class="back-to-posts bottom-back-link">
+            <a href="{{ back_url }}">&larr; {{ back_label }}</a>
+        </div>
+        </article>
+  </main>
+    <!-- Comment overlay -->
+    <div class="overlay" id="commentOverlay" role="dialog" aria-modal="true" aria-labelledby="commentsTitle" tabindex="-1">
+        <div class="container">
+            <button id="closeCommentsBtn" aria-label="Close comments overlay">×</button>
+            <h3 id="commentsTitle">Comments</h3>
+            <div id="commentsContainer" tabindex="0" aria-live="polite" aria-relevant="additions"></div>
+            <div class="comment-input">
+                <textarea id="commentInput" placeholder="Add a comment..." aria-label="Add a comment"></textarea>
+                <button id="postBtn">Post              
+            </div>
+        </div>
+    </div>
+    <!-- Delete popup -->
+    <div id="deletePopup" class="delete-popup" style="display:none;" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle" aria-describedby="deleteDesc">
+        <div class="delete-dialog">
+            <p id="deleteTitle">Delete this comment?</p>
+            <p id="deleteDesc">Are you sure you want to delete this comment?</p>
+            <button class="btn-delete" id="confirmDeleteBtn">Delete</button>
+            <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
+        </div>
+    </div>
+{% endblock %}

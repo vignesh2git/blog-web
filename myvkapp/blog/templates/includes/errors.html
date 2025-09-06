@@ -1,0 +1,54 @@
+{% if messages %}
+  {% for message in messages %}
+    {% if 'success' in message.tags %}
+      <div class="popup-overlay show" id="success-popup">
+        <div class="popup-content success">
+          <span class="close-btn" onclick="document.getElementById('success-popup').style.display='none'">&times;</span>
+          <h2 class='success_msg'>Success!</h2>
+          <p>{{ message }}</p>
+        </div>
+      </div>
+    {% elif 'error' in message.tags %}
+      <div class="popup-overlay show" id="error-popup">
+        <div class="popup-content error">
+          <span class="close-btn" onclick="document.getElementById('error-popup').style.display='none'">&times;</span>
+          <h2 class='error_msg'>Error!</h2>
+          <p>{{ message }}</p>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+       
+{% if form.username.errors %}
+        <div class="error">{{ form.username.errors.0 }}</div>
+{% endif %} 
+
+{% if form.new_password.errors %}
+    <div class="error">{{ form.new_password.errors.0 }}</div>
+{% endif %}
+
+{% for error in  form.non_field_errors %}
+    <div class="error">{{ error }}</div>
+{% endfor %}
+
+
+<script>
+  // Close popup by ID
+  function closePopup(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  // Add listener to detect outside clicks
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.popup-overlay').forEach(function (overlay) {
+      overlay.addEventListener('click', function (e) {
+        // If the click is outside the popup content, close the overlay
+        if (!e.target.closest('.popup-content')) {
+          overlay.style.display = 'none';
+        }
+      });
+    });
+  });
+</script>

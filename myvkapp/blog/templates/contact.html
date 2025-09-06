@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+    <section class="contact-rich">
+        <div class="contact-container">
+            <div class="contact-image">
+                <img src="/static/blog/images/contact_img.avif" alt="Contact Us" />
+            </div>
+            <div class="contact-form">
+                <h2>Get in Touch</h2>
+                <p>Have a question, collaboration, or just want to say hi? We’d love to hear from you!</p>
+                {% include "includes/errors.html" %}
+                <form  method="post">
+                    {% csrf_token %}
+                    <input type="text" name= "username" value="{{name}}" placeholder="Full Name" required />
+                    <input type="email" name= "email" value="{{email}}"  placeholder="Email Address" required />
+                    <textarea name="message" rows="5" value="{{message}}"  placeholder="Your Message" required></textarea>
+                    <button type="submit">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+    

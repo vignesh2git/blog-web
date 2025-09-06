@@ -1,0 +1,23 @@
+<header>
+    <nav class="navbar">
+        <div class="logo"><a href="/">𝐕𝐂 𝐁𝐥𝐨𝐠</a></div>
+        <!-- Hamburger Checkbox Toggle -->
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="hamburger"><i class="fas fa-bars"></i></label>
+        <ul class="nav-links">
+            <li ><a href="/" >Home</a></li>
+            <li><a href="/blog_post_page">Posts</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url 'blog:dashboard' %}">Dashboard</a></li>           
+            {% else %}
+            <li><a href="{% url 'blog:register' %}">Register</a></li>
+            <li><a href="{% url 'blog:login' %}">Login</a></li>
+            {%endif%}
+        </ul>
+    </nav>
+</header> 
+
+
+

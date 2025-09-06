@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}    
+    <section class="edit-post">
+        <div class="edit-container">
+            <h2>Edit Your Blog Post</h2>
+            {% include "includes/errors.html" %}
+            <form action="#" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="title">Blog Title</label>
+                    <input type="text" id="title" name="title" value="{{post.title}}" required />
+                </div>
+                <div class="form-group">
+                    <label>Current Featured Image</label>
+                    <img src="{{post.formatted_img_url}}" alt="Current blog image" class="preview-img" />
+                </div>
+                <div class="form-group">
+                    <label for="image">Replace Image (optional)</label>
+                    <input type="file" id="image" name="img_url" accept="image/*" />
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                    <option value="">Select Category</option>
+                    {% if categories %}
+                        {% for category in categories %}
+                        <option {% if post.category.id == category.id %}selected {%endif%} value="{{category.id}}">{{category.name}}</option>
+                        {%endfor%}
+                    {%endif%} 
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="content">Blog Content</label>
+                    <textarea id="content" name="content" rows="8" required>{{post.content}}
+                    </textarea>
+                </div>
+                <button type="submit">Update Post</button>
+                    <div class="back-to-posts bottom-back-link">
+                    <a href="{% url 'blog:dashboard' %}">&larr; Back to Dashboard</a>
+                </div>
+            </form>
+        </div>  
+    </section>
+{% endblock %}

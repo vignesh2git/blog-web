@@ -1,0 +1,226 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>𝐕𝐂 𝐁𝐥𝐨𝐠</title>
+  <link rel="stylesheet" href="{% static  'blog/style.css' %}"/>
+  <link rel="stylesheet" href="{% static  'blog/responsive.css' %}"/>
+  <link rel="shortcut icon" href="/images/brand.jpg" type="image/x-icon">
+</head>
+
+<body class="dashboard-body">
+
+      <!-- Hidden checkbox for toggling sidebar -->
+  <input type="checkbox" id="sidebar-toggle" hidden>
+
+  <!-- Overlay div to catch clicks outside sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Top header ONLY for small screens -->
+  <header class="top-header">
+    <h2 class="logo"><a href="/">𝐕𝐂 𝐁𝐥𝐨𝐠</a></h2>
+    <label for="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">&#9776;</label>
+  </header>
+    
+  <div class="blog-dashboard">
+    <!-- Sidebar -->
+   
+    <aside class="sidebar">
+      <h2 class="logo"><a href="/">𝐕𝐂 𝐁𝐥𝐨𝐠</a></h2>
+      
+      <!-- Profile Image -->
+      <div class="profile">
+          <div class="profile-image-container">
+            <img src={{ user.profile.profile_image.url }} alt="Profile Picture">
+          </div>            
+          <h3>{{user.username| capfirst}}</h3>
+      </div>
+
+      <nav>
+          <ul>
+            <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+            <li class="active"><a href="/dashboard"><i class="fas fas fas fas fa-user-edit"></i> Dashboard</a></li>              
+            <li><a href="/blog_post_page"><i class="fas fa-list"></i> All Posts</a></li>              
+            <li><a href="/settings"><i class="fas fa-cog"></i>Settings</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            {%endif%}
+          </ul>
+      </nav>
+
+      <footer class="aside-footer">
+          <p>&copy; 𝟐𝟎𝟐𝟓 𝐕𝐂. 𝐀𝐥𝐥 𝐫𝐢𝐠𝐡𝐭𝐬 𝐫𝐞𝐬𝐞𝐫𝐯𝐞𝐝.</p>
+      </footer>
+    </aside>
+    {% block content %}
+    {% endblock  %}
+  </div>
+
+    <!-- conform delete btn -->
+<script>
+  // conform delete btn
+  function confirmBeforeDelete(url){
+    var userConfirmed = confirm('Are Sure Want to Delete..?')
+    if(userConfirmed){
+        window.location.href = url
+    }
+  }
+</script>
+
+    <!-- post like -->
+<script>
+  //post like
+    document.addEventListener('DOMContentLoaded', function () {
+        const likeToggles = document.querySelectorAll('.post_like_toggle');
+
+        likeToggles.forEach(checkbox => {
+        const postId = checkbox.getAttribute('data-post-id');
+        const label = checkbox.closest('.post_like_btn');
+        const countSpan = label.querySelector('.likeCount');
+
+        checkbox.addEventListener('change', function () {
+            fetch("{% url 'blog:like_post' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: `post_id=${postId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+            countSpan.textContent = data.like_count;
+
+            // Optional: change heart style via class toggle
+            const heart = label.querySelector('.post_heart');
+            heart.textContent = data.liked ? "❤️" : "🤍";
+            })
+            .catch(error => console.error("Error:", error));
+        });
+        });
+    });
+</script>
+<!-- dashboard moblie sidebar -->
+<script>
+  //dashboard moblie sidebar
+  document.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById("sidebarOverlay");
+    const sidebarToggle = document.getElementById("sidebar-toggle");
+
+    overlay.addEventListener("click", () => {
+      // Only close sidebar if screen width is 768px or less (mobile)
+      if (window.innerWidth <= 768) {
+        sidebarToggle.checked = false;
+      }
+    });
+  });
+</script>
+
+    <!-- notification -->
+<script>
+  //notification
+      const csrftoken = '{{ csrf_token }}';
+      document.addEventListener('DOMContentLoaded', function() {
+      const bellIcon = document.querySelector('.fa-bell');
+      const overlay = document.getElementById('notificationOverlay');
+      const closeBtn = document.getElementById('closeOverlayBtn');
+      const clearBtn = document.getElementById('clearNotificationsBtn');
+      const notificationList = document.getElementById('notificationList');
+
+      // Show clear button only if there are notifications
+      function toggleClearButton() {
+        const hasNotifications = Array.from(notificationList.children).some(li => {
+          return li.textContent.trim() !== "No notifications yet.";
+        });
+        clearBtn.style.display = hasNotifications ? 'inline-block' : 'none';
+      }
+
+      toggleClearButton(); 
+
+      bellIcon.addEventListener('click', () => {
+        overlay.style.display = 'flex';
+          //  Mark notifications 
+        fetch("{% url 'blog:mark_notifications_read' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          }
+        }).then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // ✅ Remove the gold class
+              bellIcon.classList.remove('has-notifications');
+            }
+          });
+      });
+
+      closeBtn.addEventListener('click', () => {
+        overlay.style.display = 'none';
+      });
+
+      // Clicking outside overlay-content closes overlay
+      overlay.addEventListener('click', (e) => {
+        if(e.target === overlay) {
+          overlay.style.display = 'none';
+        }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        fetch("{% url 'blog:clear_notifications' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.success) {
+            notificationList.innerHTML = '<li>No notifications yet.</li>';
+            toggleClearButton();  
+            bellIcon.classList.remove('has-notifications'); 
+          }
+        });
+      });
+      });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const triggerUpload = document.getElementById("triggerUpload");
+    const profileImageInput = document.getElementById("profileImage");
+    const imagePreview = document.getElementById("imagePreview");
+
+
+    if (!triggerUpload || !profileImageInput || !imagePreview) {
+      console.warn('One or more elements are missing:', {
+        triggerUpload, profileImageInput, imagePreview
+      });
+      return; // Exit if any element is missing
+    }
+
+    // When pencil icon is clicked, trigger file input click
+    triggerUpload.addEventListener("click", () => {
+      profileImageInput.click();
+    });
+
+    // Preview selected image before uploading
+    profileImageInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          imagePreview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
