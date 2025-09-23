@@ -52,7 +52,7 @@ def index(request):
         {"blog_title": blog_title, "posts": posts, "liked_post_ids": liked_post_ids},
     )
 
-
+@login_required
 def blog_post_page(request):
 
     # getting data from Post model
@@ -85,7 +85,7 @@ def detail(request, slug):
         messages.error(
             request, "You must be logged in to view the full post. Please Login...!"
         )
-        return redirect("blog:blog_post_page")
+        return redirect("blog:index")
 
     try:
         # getting data from model by post id

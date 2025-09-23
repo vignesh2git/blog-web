@@ -1171,6 +1171,7 @@ button[type="submit"]:hover {
   background-color: rgb(152, 166, 166);
   border-radius: 8px;
   padding-left: 1%;
+  user-select: none;
 }
 
 .user-actions {
@@ -1179,6 +1180,11 @@ button[type="submit"]:hover {
   gap: 20px;
   color: black;
   padding-right: 1%;
+  
+}
+
+.user-actions i{
+  cursor: pointer;
 }
 
 .dashboard-cards {

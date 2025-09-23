@@ -6,7 +6,9 @@
         <label for="menu-toggle" class="hamburger"><i class="fas fa-bars"></i></label>
         <ul class="nav-links">
             <li ><a href="/" >Home</a></li>
+            {% if user.is_authenticated %}
             <li><a href="/blog_post_page">Posts</a></li>
+            {%endif%}
             <li><a href="/about">About</a></li>
             <li><a href="/contact">Contact</a></li>
             {% if user.is_authenticated %}
