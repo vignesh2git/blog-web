@@ -59,9 +59,8 @@ A full-stack web app where users can:
 
 🔴 REC 𝐃𝐞𝐦𝐨 Video
 ---
-Laptop View
----
-![Blog web Demo](templates/image/Blog-web.mp4)
+
+[▶️ Watch the video](templates/image/Blog-web.mp4)
 
 
 
