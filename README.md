@@ -60,7 +60,7 @@ A full-stack web app where users can:
 🔴 REC 𝐃𝐞𝐦𝐨 Video
 ---
 
-[▶️ Watch the video](templates/image/Blog-demo.mp4)
+[▶️ Watch the video](templates/image/blog_demo.mp4)
 
 
 
