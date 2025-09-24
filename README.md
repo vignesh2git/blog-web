@@ -60,13 +60,13 @@ A full-stack web app where users can:
 ---
 Laptop View
 ---
-![Blog web Screenshot](myvkapp/templates/image/laptop_view.png)
+![Blog web Screenshot](templates/image/laptop_view.png)
 
 
 
 Moblie View
 ---
-![Blog web Screenshot](myvkapp/templates/image/Mobile_view.png)
+![Blog web Screenshot](templates/image/Mobile_view.png)
 
 
 
