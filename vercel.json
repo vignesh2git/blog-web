@@ -1,0 +1,18 @@
+{
+  "builds": [
+    {
+      "src": "myvkapp/wsgi.py",
+      "use": "@ardnt/vercel-python-wsgi"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "myvkapp/wsgi.py"
+    }
+  ]
+}
